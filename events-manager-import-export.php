@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Events Manager Import Export
-Plugin URI:
+Plugin URI: https://github.com/webaware/events-manager-import-export
 Description: import and export function for Events Manager
-Version: 0.0.7
+Version: 0.0.8
 Author: WebAware
 Author URI: http://webaware.com.au/
 */
@@ -33,7 +33,7 @@ if (!defined('ABSPATH')) {
 define('EM_IMPEXP_PLUGIN_FILE', __FILE__);
 define('EM_IMPEXP_PLUGIN_ROOT', dirname(__FILE__) . '/');
 define('EM_IMPEXP_PLUGIN_NAME', basename(dirname(__FILE__)) . '/' . basename(__FILE__));
-define('EM_IMPEXP_PLUGIN_VERSION', '0.0.7');
+define('EM_IMPEXP_PLUGIN_VERSION', '0.0.8');
 
 // instantiate the plug-in
 require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpPlugin.php';
