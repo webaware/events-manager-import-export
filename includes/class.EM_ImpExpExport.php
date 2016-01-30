@@ -96,6 +96,9 @@ class EM_ImpExpExport {
 
 			// output some custom properties
 			$xml->writeElement('x-post_content', $EM_Event->post_content);
+			if (!empty($EM_Event->post_excerpt)) {
+				$xml->writeElement('x-post_excerpt', $EM_Event->post_excerpt);
+			}
 			$xml->writeElement('x-event_spaces', $EM_Event->event_spaces);
 
 			// get the start, end and last modified dates/times

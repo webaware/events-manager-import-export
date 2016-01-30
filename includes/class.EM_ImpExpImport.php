@@ -128,6 +128,7 @@ class EM_ImpExpImport {
 							'interval' => '',
 							'until' => '',
 							'x-post_content' => '',
+							'x-post_excerpt' => '',
 							'x-event_spaces' => '',
 							'x-location_name' => '',
 							'x-location_address' => '',
@@ -201,6 +202,7 @@ class EM_ImpExpImport {
 							$event->event_attributes['em_impexp_url'] = $data['url'];
 							$event->event_name = $data['summary'];
 							$event->post_content = $data['x-post_content'];
+							$event->post_excerpt = $data['x-post_excerpt'];
 							if ($data['dtstart']) {
 								$event->start = strtotime($data['dtstart']);
 								$event->event_start_date = date('Y-m-d', $event->start);
@@ -368,6 +370,7 @@ class EM_ImpExpImport {
 					'interval'            => isset($cols['interval']) ? $cols['interval'] : '',
 					'until'               => isset($cols['until']) ? $cols['until'] : '',
 					'post_content'        => isset($cols['post_content']) ? $cols['post_content'] : '',
+					'post_excerpt'        => isset($cols['post_excerpt']) ? $cols['post_excerpt'] : '',
 					'event_spaces'        => isset($cols['event_spaces']) ? $cols['event_spaces'] : '',
 					'location_name'       => isset($cols['location_name']) ? $cols['location_name'] : '',
 					'location_address'    => isset($cols['location_address']) ? $cols['location_address'] : '',
@@ -436,6 +439,7 @@ class EM_ImpExpImport {
 				$event->event_attributes['em_impexp_url'] = $data['url'];
 				$event->event_name = $data['summary'];
 				$event->post_content = $data['post_content'];
+				$event->post_excerpt = $data['post_excerpt'];
 				if (preg_match('@^\\d\\d/\\d\\d/\\d\\d\\d\\d$@', $data['dtstart'])) {
 					$data['dtstart'] .= ' 00:00:00';
 					$event->start = date_create_from_format('d/m/Y H:i:s', $data['dtstart'])->getTimestamp();
