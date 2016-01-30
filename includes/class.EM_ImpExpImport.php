@@ -151,10 +151,6 @@ class EM_ImpExpImport {
 						// end of vevent element, save record
 						if ($haveRecord) {
 
-//~ error_log(__METHOD__ . "\n" . print_r($data,1));
-//~ error_log(__METHOD__ . "\n" . print_r($attrs,1));
-//~ exit;
-
 							// if we have location, try to either retrieve it by name, or create a new location object
 							$location = false;
 							if ($haveLocation) {
@@ -182,10 +178,6 @@ class EM_ImpExpImport {
 									$location->location_longitude = $data['x-location_longitude'];
 									$location->save();
 								}
-
-//~ error_log(__METHOD__ . "\n" . print_r($location,1));
-//~ exit;
-
 							}
 
 							// try to find existing event with matching unique ID first, so can update it
@@ -242,8 +234,6 @@ class EM_ImpExpImport {
 									break;
 
 							}
-
-//~ error_log(__METHOD__ . "\n" . print_r($event,1));
 
 							if ($event) {
 								$event->save();
@@ -402,10 +392,6 @@ class EM_ImpExpImport {
 					}
 				}
 
-//~ error_log(__METHOD__ . "\n" . print_r($data,1));
-//~ error_log(__METHOD__ . "\n" . print_r($attrs,1));
-//~ exit;
-
 				// if we have location, try to either retrieve it by name, or create a new location object
 				$location = false;
 				if (self::hasLocation($data)) {
@@ -427,9 +413,6 @@ class EM_ImpExpImport {
 						$location->location_longitude = $data['location_longitude'];
 						$location->save();
 					}
-
-//~ echo "<pre>", print_r($location,1), "</pre>\n";
-//~ exit;
 				}
 
 				// try to find existing event with matching unique ID first, so can update it
