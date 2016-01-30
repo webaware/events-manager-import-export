@@ -14,6 +14,9 @@ class EM_ImpExpImportException extends Exception {}
 */
 class EM_ImpExpPlugin {
 
+	const TRANSIENT_UPDATE_INFO		= 'em_import_export_update_info';
+	const URL_UPDATE_INFO			= 'https://raw.githubusercontent.com/webaware/events-manager-import-export/master/latest.json';
+
 	/**
 	* static method for getting the instance of this singleton object
 	* @return self
@@ -34,6 +37,11 @@ class EM_ImpExpPlugin {
 	private function __construct() {
 		add_action('init', array($this, 'init'));
 		add_action('admin_menu', array($this, 'addAdminMenu'), 20);
+
+		// check for plugin updates
+		add_filter('pre_set_site_transient_update_plugins', array($this, 'checkPluginUpdates'));
+		add_filter('plugins_api', array($this, 'getPluginInfo'), 10, 3);
+		add_action('plugins_loaded', array($this, 'clearPluginInfo'));
 
 		// register import/export actions
 		add_action('admin_post_em_impexp_export', array($this, 'exportEvents'));
@@ -81,6 +89,59 @@ class EM_ImpExpPlugin {
 		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpExport.php';
 		$admin = new EM_ImpExpExport($this);
 		$admin->export();
+	}
+
+	/**
+	* check for plugin updates, every so often
+	* @param object $plugins
+	* @return object
+	*/
+	public function checkPluginUpdates($plugins) {
+		if (empty($plugins->last_checked)) {
+			return $plugins;
+		}
+
+		$current = $this->getPluginData();
+		$latest = $this->getLatestVersionInfo();
+
+		if ($latest && version_compare($current['Version'], $latest->version, '<')) {
+			$update = new stdClass;
+			$update->id				= '0';
+			$update->url			= $latest->homepage;
+			$update->slug			= $latest->slug;
+			$update->new_version	= $latest->version;
+			$update->package		= $latest->download_link;
+
+			$plugins->response[EM_IMPEXP_PLUGIN_NAME] = $update;
+		}
+
+		return $plugins;
+	}
+
+	/**
+	* return plugin info for update pages, plugins list
+	* @param boolean $false
+	* @param array $action
+	* @param object $args
+	* @return bool|object
+	*/
+	public function getPluginInfo($false, $action, $args) {
+		if (isset($args->slug) && $args->slug === basename(EM_IMPEXP_PLUGIN_NAME, '.php')) {
+			return $this->getLatestVersionInfo();
+		}
+
+		return $false;
+	}
+
+	/**
+	* if user asks to force an update check, clear our cached plugin info
+	*/
+	public function clearPluginInfo() {
+		global $pagenow;
+
+		if (!empty($_GET['force-check']) && !empty($pagenow) && $pagenow === 'update-core.php') {
+			delete_site_transient(self::TRANSIENT_UPDATE_INFO);
+		}
 	}
 
 	/**
