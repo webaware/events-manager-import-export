@@ -243,6 +243,7 @@ class EM_ImpExpImport {
 
 								if ($data['categories']) {
 									$categories = explode(',', $data['categories']);
+									$eventcats = $event->get_categories();
 									foreach ($categories as $category) {
 										$category = trim($category);
 										if (isset($eventCategories[$category])) {
@@ -257,10 +258,10 @@ class EM_ImpExpImport {
 										}
 
 										if ($cat) {
-											$event->categories->categories[$cat->id] = $cat;
+											$eventcats->categories[$cat->id] = $cat;
 										}
 									}
-									$event->categories->save();
+									$eventcats->save();
 								}
 							}
 
@@ -488,6 +489,7 @@ class EM_ImpExpImport {
 
 					if ($data['categories']) {
 						$categories = explode(',', $data['categories']);
+						$eventcats = $event->get_categories();
 						foreach ($categories as $category) {
 							$category = trim($category);
 							if (isset($eventCategories[$category])) {
@@ -502,10 +504,10 @@ class EM_ImpExpImport {
 							}
 
 							if ($cat) {
-								$event->categories->categories[$cat->id] = $cat;
+								$eventcats->categories[$cat->id] = $cat;
 							}
 						}
-						$event->categories->save();
+						$eventcats->save();
 					}
 				}
 
