@@ -177,6 +177,7 @@ class EM_ImpExpImport {
 									$location->location_region    = $data['x-location_region'];
 									$location->location_latitude  = $data['x-location_latitude'];
 									$location->location_longitude = $data['x-location_longitude'];
+									self::maybeSetCoordinates($location);
 									$location->save();
 								}
 							}
@@ -415,6 +416,7 @@ class EM_ImpExpImport {
 						$location->location_region    = $data['location_region'];
 						$location->location_latitude  = $data['location_latitude'];
 						$location->location_longitude = $data['location_longitude'];
+						self::maybeSetCoordinates($location);
 						$location->save();
 					}
 				}
@@ -618,6 +620,71 @@ class EM_ImpExpImport {
 		remove_filter('em_locations_build_sql_conditions', array(__CLASS__, 'filterLocationSQL'), 10, 2);
 
 		return $location;
+	}
+
+	/**
+	* maybe set the coordinates for an imported location
+	* @param EM_Location &$location
+	*/
+	protected static function maybeSetCoordinates(&$location) {
+		if (empty($location->location_latitude) && empty($location->location_longitude)) {
+			// distill location down to fields that have been set
+			$parts = array_filter(array (
+						$location->location_address,
+						$location->location_town,
+						$location->location_state,
+						$location->location_postcode,
+						$location->get_country(),
+					), 'strlen');
+
+			if (!empty($parts)) {
+				$address = implode(', ', $parts);
+
+				// try to get a cached answer first
+				$cacheKey = 'em_impexp_addr_' . md5($address);
+				$coords = get_transient($cacheKey);
+
+				if ($coords === false) {
+					// build Google Maps geocoding query
+					$url = add_query_arg(array('address' => urlencode($address)), 'https://maps.googleapis.com/maps/api/geocode/json');
+
+					try {
+						// fetch coordinates
+						$response = wp_remote_get($url);
+
+						if (is_wp_error($response)) {
+							throw new Exception('http error = ' . $response->get_error_message());
+						}
+
+						$result = json_decode($response['body']);
+						if (!$result) {
+							throw new Exception("error decoding JSON\n" . $response['body']);
+						}
+
+						if ($result->status != 'OK') {
+							throw new Exception("error retrieving address: " . $result->status);
+						}
+
+						// success, build array with latitude and longitude from first result
+						$location = $result->results[0]->geometry->location;
+						$coords = array('latitude' => $location->lat, 'longitude' => $location->lng);
+					}
+					catch (Exception $e) {
+						$coords = "address: $address; " . $e->getMessage();
+						error_log(__METHOD__ . ': ' . $coords);
+					}
+
+					// save coordinates to prevent unnecessary requery
+					set_transient($cacheKey, $coords, WEEK_IN_SECONDS);
+				}
+
+				// if we got coordinates, add them to the location
+				if (is_array($coords)) {
+					$location->location_latitude  = $coords['latitude'];
+					$location->location_longitude = $coords['longitude'];
+				}
+			}
+		}
 	}
 
 	/**
