@@ -12,4 +12,4 @@ I probably won't be releasing this on WordPress.org because there's already a pr
 
 However, for those who want to continue using this plugin, please feel free to lodge issues and create pull requests. I can't promise that I'll address them in a timely fashion, but I'll try my best.
 
-[Donations are always welcome](http://shop.webaware.com.au/donations/?donation_for=Events+Manager+Import+Export) :)
+[Donations are always welcome](http://shop.webaware.com.au/donations/?donation_for=Events+Manager+Import+Export) :smiley:
