@@ -2,16 +2,16 @@
 	"slug" : "events-manager-import-export",
 	"name" : "Events Manager Import Export",
 	"author" : "<a href='http://webaware.com.au/'>WebAware</a>",
-	"version" : "0.0.10",
-	"new_version" : "0.0.10",
+	"version" : "0.0.11",
+	"new_version" : "0.0.11",
 	"requires" : "4.0",
-	"tested" : "4.4.1",
-	"last_updated" : "2016-01-31 06:30",
+	"tested" : "4.4.2",
+	"last_updated" : "2016-02-09 08:10",
 	"homepage" : "https://github.com/webaware/events-manager-import-export",
-	"download_link" : "https://github.com/webaware/events-manager-import-export/releases/download/0.0.10/events-manager-import-export-0.0.10.zip",
+	"download_link" : "https://github.com/webaware/events-manager-import-export/releases/download/0.0.11/events-manager-import-export-0.0.11.zip",
 	"upgrade_notice" : "attempt to set location coordinates on import",
 	"sections" : {
 		"description" : "Basic import and export function for Events Manager",
-		"changelog" : "<h3>0.0.10, 2016-01-31</h3><ul><li>attempt to set location coordinates on import</li></ul><h3>0.0.9, 2016-01-30</h3><ul><li>the plugin can receive update notifications and auto-update from within WordPress</li></ul><h3>0.0.8, 2016-01-30</h3><ul><li>fix category imports for current Events Manager</li><li>fix WordPress 4.4 import error for missing post_excerpt</li></ul>"
+		"changelog" : "<h3>0.0.11, 2016-02-09</h3><ul><li>fix bug with geolocation overwriting location object for new locations</li><li>refactor .xcs location creation to work like .csv location creation</li></ul><h3>0.0.10, 2016-01-31</h3><ul><li>attempt to set location coordinates on import</li></ul><h3>0.0.9, 2016-01-30</h3><ul><li>the plugin can receive update notifications and auto-update from within WordPress</li></ul><h3>0.0.8, 2016-01-30</h3><ul><li>fix category imports for current Events Manager</li><li>fix WordPress 4.4 import error for missing post_excerpt</li></ul>"
 	}
 }
