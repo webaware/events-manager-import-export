@@ -110,6 +110,7 @@ class EM_ImpExpImport {
 		$records = 0;
 		$attrs = array();
 		$eventCategories = self::getEventCategories();
+		$eventCountries = self::getEventCountries();
 
 		while ($xml->read()) {
 			switch ($xml->nodeType) {
@@ -156,14 +157,8 @@ class EM_ImpExpImport {
 							$location = false;
 							if ($haveLocation) {
 								if ($data['x-location_name']) {
-									add_filter('em_locations_get_default_search', array(__CLASS__, 'filterLocationArgs'), 10, 2);
-									add_filter('em_locations_build_sql_conditions', array(__CLASS__, 'filterLocationSQL'), 10, 2);
-
-									$location = EM_Locations::get(array('location_name' => $data['x-location_name']));
-									$location = count($location) > 0 ? $location[0] : false;
-
-									remove_filter('em_locations_get_default_search', array(__CLASS__, 'filterLocationArgs'), 10, 2);
-									remove_filter('em_locations_build_sql_conditions', array(__CLASS__, 'filterLocationSQL'), 10, 2);
+									// try to find location by name
+									$location = $this->getLocationByName($data['x-location_name']);
 								}
 								if (!$location) {
 									// must create a new location object
@@ -189,7 +184,7 @@ class EM_ImpExpImport {
 								add_filter('em_events_build_sql_conditions', array(__CLASS__, 'filterEventSQL'), 10, 2);
 
 								$event = EM_Events::get(array('em_impexp_uid' => $data['uid']));
-								$event = count($event) > 0 ? $event[0] : false;
+								$event = empty($event[0]) ? false : $event[0];
 
 								remove_filter('em_events_get_default_search', array(__CLASS__, 'filterEventArgs'), 10, 2);
 								remove_filter('em_events_build_sql_conditions', array(__CLASS__, 'filterEventSQL'), 10, 2);
@@ -279,6 +274,19 @@ class EM_ImpExpImport {
 							case 'x-event_attribute':
 								// add to attributes array
 								$attrs[$xml->getAttribute('name')] = $text;
+								break;
+
+							case 'x-location_country':
+								if ($text !== '') {
+									// convert to location code
+									if (isset($eventCountries[strtolower($text)])) {
+										$data[$name] = $eventCountries[strtolower($text)];
+									}
+									else {
+										$data[$name] = $text;
+									}
+									$haveLocation = true;
+								}
 								break;
 
 							default:
@@ -599,7 +607,7 @@ class EM_ImpExpImport {
 		), 'strlen');
 
 		// return the first element
-		return array_shift($location[0]);
+		return array_shift($location);
 	}
 
 	/**
@@ -608,16 +616,26 @@ class EM_ImpExpImport {
 	* @return EM_Location
 	*/
 	protected static function getLocationByName($location_name) {
-		// add query filters to splice in our search term
-		add_filter('em_locations_get_default_search', array(__CLASS__, 'filterLocationArgs'), 10, 2);
-		add_filter('em_locations_build_sql_conditions', array(__CLASS__, 'filterLocationSQL'), 10, 2);
+		static $locations = false;
 
-		$location = EM_Locations::get(array('location_name' => $location_name));
-		$location = count($location) > 0 ? $location[0] : false;
+		if ($locations === false) {
+			global $wpdb;
+			$sql = "
+				select location_name, location_id
+				from " . EM_LOCATIONS_TABLE . "
+				where location_status = 1
+			";
+			$rows = $wpdb->get_results($sql);
 
-		// remove our query filters
-		remove_filter('em_locations_get_default_search', array(__CLASS__, 'filterLocationArgs'), 10, 2);
-		remove_filter('em_locations_build_sql_conditions', array(__CLASS__, 'filterLocationSQL'), 10, 2);
+			$locations = array();
+			foreach ($rows as $row) {
+				$locations[strtolower($row->location_name)] = (int) $row->location_id;
+			}
+		}
+
+		$location_name = strtolower($location_name);
+
+		$location = empty($locations[$location_name]) ? false : new EM_Location($locations[$location_name]);
 
 		return $location;
 	}
@@ -712,36 +730,6 @@ class EM_ImpExpImport {
 			$em_events_table = EM_EVENTS_TABLE;
 			$uid = esc_sql($args['em_impexp_uid']);
 			$conditions[] = "($em_events_table.event_attributes regexp '\"em_impexp_uid\";s:\[0-9\]+:\"$uid\"')";
-		}
-
-		return $conditions;
-	}
-
-	/**
-	* filter the search arguments for a location search, to restore the location_name argument
-	* @param array $filtered assoc. array of filtered arguments used for search
-	* @param array $args assoc. array of original search arguments
-	* @return array
-	*/
-	public static function filterLocationArgs($filtered, $args) {
-		if (isset($args['location_name'])) {
-			$filtered['location_name'] = $args['location_name'];
-		}
-
-		return $filtered;
-	}
-
-	/**
-	* filter the SQL where clause conditions for a location search, to include location_name
-	* @param array $conditions where clause conditions
-	* @param array $args assoc. array of search arguments
-	* @return array
-	*/
-	public static function filterLocationSQL($conditions, $args) {
-		global $wpdb;
-
-		if (isset($args['location_name'])) {
-			$conditions[] = $wpdb->prepare("location_name = %s", $args['location_name']);
 		}
 
 		return $conditions;
