@@ -684,8 +684,8 @@ class EM_ImpExpImport {
 						}
 
 						// success, build array with latitude and longitude from first result
-						$location = $result->results[0]->geometry->location;
-						$coords = array('latitude' => $location->lat, 'longitude' => $location->lng);
+						$geolocation = $result->results[0]->geometry->location;
+						$coords = array('latitude' => $geolocation->lat, 'longitude' => $geolocation->lng);
 					}
 					catch (Exception $e) {
 						$coords = "address: $address; " . $e->getMessage();
