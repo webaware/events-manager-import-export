@@ -193,6 +193,7 @@ class EM_ImpExpImport {
 								// must create a new event
 								$event = new EM_Event();
 							}
+							$event->post_id = $data['uid'];	// post_id is now NOT NULL
 							$event->location_id = $location ? $location->location_id : 0;
 							$event->event_attributes['em_impexp_uid'] = $data['uid'];
 							$event->event_attributes['em_impexp_url'] = $data['url'];
@@ -374,6 +375,7 @@ class EM_ImpExpImport {
 					'summary'             => isset($cols['summary']) ? $cols['summary'] : '',
 					'dtstart'             => isset($cols['dtstart']) ? $cols['dtstart'] : '',
 					'dtend'               => isset($cols['dtend']) ? $cols['dtend'] : '',
+					'dtformat'            => isset($cols['dtformat']) ? $cols['dtformat'] : '',
 					'categories'          => isset($cols['categories']) ? $cols['categories'] : '',
 					'freq'                => isset($cols['freq']) ? $cols['freq'] : '',
 					'byday'               => isset($cols['byday']) ? $cols['byday'] : '',
@@ -412,6 +414,12 @@ class EM_ImpExpImport {
 						// try to find location by name
 						$location = $this->getLocationByName($data['location_name']);
 					}
+					// make sure the existing location is the same one by comparing postcodes
+					if ($data['location_postcode'] && $location->location_postcode != $data['location_postcode']) {
+						// this location has the same location_name as the one we want to create, but
+						// is actually a different location (e.g. City Hall in City A vs City Hall in City B)
+						$location = false;
+					}
 					if (!$location) {
 						// must create a new location object
 						$location = new EM_Location();
@@ -445,29 +453,36 @@ class EM_ImpExpImport {
 					// must create a new event
 					$event = new EM_Event();
 				}
+				$event->post_id = $data['uid']; // post_id is now NOT NULL
 				$event->location_id = $location ? $location->location_id : 0;
 				$event->event_attributes['em_impexp_uid'] = $data['uid'];
 				$event->event_attributes['em_impexp_url'] = $data['url'];
 				$event->event_name = $data['summary'];
 				$event->post_content = $data['post_content'];
 				$event->post_excerpt = $data['post_excerpt'];
-				if (preg_match('@^\\d\\d/\\d\\d/\\d\\d\\d\\d$@', $data['dtstart'])) {
-					$data['dtstart'] .= ' 00:00:00';
-					$event->start = date_create_from_format('d/m/Y H:i:s', $data['dtstart'])->getTimestamp();
-					$event->event_start_date = date('Y-m-d', $event->start);
-					$event->event_start_time = date('H:i:s', $event->start);
+				$dtformat = 'd/m/Y H:i:s';
+				if (isset($data['dtformat']) && !empty($data['dtformat'])) {
+					$dtformat = $data['dtformat'];
 				}
-				if (preg_match('@^\\d\\d/\\d\\d/\\d\\d\\d\\d$@', $data['dtend'])) {
-					$data['dtend'] .= ' 00:00:00';
-					$event->end = date_create_from_format('d/m/Y H:i:s', $data['dtend'])->getTimestamp();
-					$event->event_end_date = date('Y-m-d', $event->end);
-					$event->event_end_time = date('H:i:s', $event->end);
+
+				# parse start time
+				$sevent = date_create_from_format($dtformat, $data['dtstart']);
+				if ($sevent === FALSE) {
+					die("invalid start date for " . $data['summary'] . ": dtformat is $dtformat and start date is " . $data['dtstart']);
 				}
-				else {
-					$event->end = $event->start;
-					$event->event_end_date = $event->event_start_date;
-					$event->event_end_time = $event->event_start_time;
+				$event->start = $sevent->getTimestamp();
+				$event->event_start_date = date('Y-m-d', $event->start);
+				$event->event_start_time = date('H:i:s', $event->start);
+
+				# parse end time
+				$eevent = date_create_from_format($dtformat, $data['dtend']);
+				if ($eevent === FALSE) {
+					die("invalid end date for " . $data['summary'] . ": dtformat is $dtformat and end date is " . $data['dtend']);
 				}
+				$event->end = $eevent->getTimestamp();
+				$event->event_end_date = date('Y-m-d', $event->end);
+				$event->event_end_time = date('H:i:s', $event->end);
+
 				$event->event_date_modified = current_time('mysql');
 				$event->event_all_day = ($event->event_start_time === '00:00:00' && $event->event_end_time === '00:00:00') ? 1 : 0;
 
