@@ -2,6 +2,15 @@
 
 ## Changelog
 
+### 0.0.12, soon...
+
+* merged: [@asmartin pull request](https://github.com/webaware/events-manager-import-export/pull/1); thanks!
+  - post_id is now required in the database, so add it
+  - verify new location matches existing by comparing postcodes
+  - added support for custom datetime formats in the import CSV using the dtformat column
+  - added support for specifying start and end times (rather than hardcoding 00:00:00)
+  - added example CSV to the README
+
 ### 0.0.11, 2016-02-09
 
 * fix bug with geolocation overwriting location object for new locations
