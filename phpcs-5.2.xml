@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ruleset name="PHP_CodeSniffer">
+	<description>PHP sniffs for PHP 5.2 compatibility.</description>
+
+	<file>events-manager-import-export.php</file>
+	<file>views/requires-php.php</file>
+	<file>includes/functions-global.php</file>
+
+	<arg name="basepath" value="." />
+	<arg name="colors" />
+	<arg name="extensions" value="php" />
+	<arg name="tab-width" value="4" />
+
+	<config name="testVersion" value="5.2-"/>
+
+	<rule ref="PHPCompatibility" />
+	<rule ref="Generic.PHP.DisallowShortOpenTag" />
+
+</ruleset>
