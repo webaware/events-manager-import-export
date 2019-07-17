@@ -14,6 +14,9 @@ class Updater {
 
 	const TRANSIENT_UPDATE_INFO		= 'em_import_export_update_info';
 	const URL_UPDATE_INFO			= 'https://rawgit.com/webaware/events-manager-import-export/master/latest.json';
+	const CHANGELOG_QUERY_PARAM		= 'em_import_export_changelog';
+
+	public $name = EM_IMPEXP_PLUGIN_NAME;
 
 	public function __construct() {
 		// check for plugin updates
@@ -47,7 +50,11 @@ class Updater {
 			$update->url			= $latest->homepage;
 			$update->slug			= $latest->slug;
 			$update->new_version	= $latest->version;
+			$update->tested			= $latest->tested;
+			$update->requires		= $latest->requires;
+			$update->requires_php	= $latest->requires_php;
 			$update->package		= $latest->download_link;
+			$update->upgrade_notice	= $latest->upgrade_notice;
 
 			$plugins->response[EM_IMPEXP_PLUGIN_NAME] = $update;
 		}
@@ -103,20 +110,13 @@ class Updater {
 		if ($info && version_compare($current['Version'], $info->new_version, '<')) {
 			// build a plugin list row, with update notification
 			$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
-			echo '<tr class="plugin-update-tr"><td colspan="' . $wp_list_table->get_column_count() . '" class="plugin-update colspanchange"><div class="update-message">';
+			$plugin_name   = esc_html( $info->name );
+			$plugin_slug   = esc_html( $info->slug );
+			$new_version   = esc_html( $info->new_version );
 
-			$changelog_link = self_admin_url("index.php?em_import_export_changelog=1&plugin={$info->slug}&slug={$info->slug}&TB_iframe=true");
+			$changelog_link = self_admin_url(sprintf('index.php?%1$s=1&plugin=%2$s&slug=%2$s&TB_iframe=true', self::CHANGELOG_QUERY_PARAM, $info->slug));
 
-			printf(
-				__('There is a new version of %1$s available. <a href="%2$s" class="thickbox" title="%3$s">View version %4$s details</a> or <a href="%5$s">update now</a>.'),
-				esc_html($info->name),
-				esc_url($changelog_link),
-				esc_html($info->name),
-				esc_html($info->new_version),
-				esc_url(wp_nonce_url(self_admin_url('update.php?action=upgrade-plugin&plugin=' . EM_IMPEXP_PLUGIN_NAME), 'upgrade-plugin_' . EM_IMPEXP_PLUGIN_NAME))
-			);
-
-			echo '</div></td></tr>';
+			include EM_IMPEXP_PLUGIN_ROOT . 'views/admin-plugin-update.php';
 		}
 	}
 
@@ -147,7 +147,7 @@ class Updater {
 			delete_site_transient(self::TRANSIENT_UPDATE_INFO);
 
 			$url = add_query_arg(['v' => time()], self::URL_UPDATE_INFO);
-			$response = wp_remote_get($url, ['timeout' => 60]);
+			$response = wp_remote_get($url, ['timeout' => 15]);
 
 			if (is_wp_error($response)) {
 				return false;
@@ -155,8 +155,7 @@ class Updater {
 
 			if ($response) {
 				// load and decode JSON from response body
-				$body = wp_remote_retrieve_body($response);
-				$info = json_decode($body);
+				$info = json_decode(wp_remote_retrieve_body($response));
 
 				if ($info) {
 					$sections = [];
@@ -177,9 +176,9 @@ class Updater {
 	* maybe show the plugin changelog from update info
 	*/
 	public function maybeShowChangelog() {
-		if (!empty($_REQUEST['em_import_export_changelog']) && !empty($_REQUEST['plugin']) && !empty($_REQUEST['slug'])) {
+		if (!empty($_REQUEST[self::CHANGELOG_QUERY_PARAM]) && !empty($_REQUEST['plugin']) && !empty($_REQUEST['slug'])) {
 			if (!current_user_can('update_plugins')) {
-				wp_die(__('You do not have sufficient permissions to update plugins for this site.'), __('Error'), ['response' => 403]);
+				wp_die(translate('Sorry, you are not allowed to update plugins for this site.'), translate('Error'), ['response' => 403]);
 			}
 
 			global $tab, $body_id;
