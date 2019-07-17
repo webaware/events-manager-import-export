@@ -1,17 +1,18 @@
 {
 	"slug" : "events-manager-import-export",
 	"name" : "Events Manager Import Export",
-	"author" : "<a href='http://webaware.com.au/'>WebAware</a>",
+	"author" : "<a href='https://shop.webaware.com.au/'>WebAware</a>",
 	"version" : "0.0.11",
 	"new_version" : "0.0.11",
-	"requires" : "4.0",
-	"tested" : "4.4.2",
-	"last_updated" : "2016-02-09 08:10",
+	"requires_php" : "5.6",
+	"requires" : "4.9",
+	"tested" : "5.2.2",
+	"last_updated" : "2019-07-16 08:10",
 	"homepage" : "https://github.com/webaware/events-manager-import-export",
 	"download_link" : "https://github.com/webaware/events-manager-import-export/releases/download/0.0.11/events-manager-import-export-0.0.11.zip",
 	"upgrade_notice" : "attempt to set location coordinates on import",
 	"sections" : {
 		"description" : "Basic import and export function for Events Manager",
-		"changelog" : "<h3>0.0.11, 2016-02-09</h3><ul><li>fix bug with geolocation overwriting location object for new locations</li><li>refactor .xcs location creation to work like .csv location creation</li></ul><h3>0.0.10, 2016-01-31</h3><ul><li>attempt to set location coordinates on import</li></ul><h3>0.0.9, 2016-01-30</h3><ul><li>the plugin can receive update notifications and auto-update from within WordPress</li></ul><h3>0.0.8, 2016-01-30</h3><ul><li>fix category imports for current Events Manager</li><li>fix WordPress 4.4 import error for missing post_excerpt</li></ul>"
+		"changelog" : "<p>See GitHub for <a href=\"https://github.com/webaware/events-manager-import-export/blob/master/changelog.md\">the complete changelog</a>.</p><h3>0.0.12, soon...</h3><ul><li>changed: requires PHP 5.6+ (recommend PHP 7.2+)</li><li>changed: parsecsv upgraded to v1.0.0</li><li>merged: <a href=\"https://github.com/webaware/events-manager-import-export/pull/1\">@asmartin pull request</a>; thanks!<ul><li>post_id is now required in the database, so add it</li><li>verify new location matches existing by comparing postcodes</li><li>added support for custom datetime formats in the import CSV using the dtformat column</li><li>added support for specifying start and end times (rather than hardcoding 00:00:00)</li><li>added example CSV to the README</li></ul></li></ul>"
 	}
 }
