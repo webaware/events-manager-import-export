@@ -2,6 +2,8 @@
 
 ## Changelog
 
+See GitHub for [the complete changelog](https://github.com/webaware/events-manager-import-export/blob/master/changelog.md).
+
 ### 0.0.12, soon...
 
 * changed: requires PHP 5.6+ (recommend PHP 7.2+)
