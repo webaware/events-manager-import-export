@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 function em_impexp_fail_php_version() {
 	if (em_impexp_can_show_admin_notices()) {
 		em_impexp_load_text_domain();
-		include GFEWAYPRO_PLUGIN_ROOT . 'views/requires-php.php';
+		include EM_IMPEXP_PLUGIN_ROOT . 'views/requires-php.php';
 	}
 }
 

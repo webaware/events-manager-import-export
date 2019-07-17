@@ -39,7 +39,6 @@ class Plugin {
 		add_action('admin_post_em_impexp_export', [$this, 'exportEvents']);
 
 		// handle automatic updates
-		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpUpdates.php';
 		new Updater();
 	}
 
@@ -59,7 +58,6 @@ class Plugin {
 	public function importAdmin() {
 		$admin_url = add_query_arg(['post_type' => EM_POST_TYPE_EVENT, 'page' => 'events-manager-import'], admin_url('edit.php'));
 
-		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpImport.php';
 		$admin = new Importer();
 		$admin->render($admin_url);
 	}
@@ -68,7 +66,6 @@ class Plugin {
 	* handle menu item for export
 	*/
 	public function exportAdmin() {
-		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpExport.php';
 		$admin = new Exporter();
 		$admin->render();
 	}
@@ -77,7 +74,6 @@ class Plugin {
 	* export data
 	*/
 	public function exportEvents() {
-		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpExport.php';
 		$admin = new Exporter();
 		$admin->export();
 	}

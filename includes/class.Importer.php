@@ -7,21 +7,15 @@ use EM_Event;
 use EM_Events;
 use EM_Location;
 use Exception;
-use parseCSV;
 use XMLReader;
+
+use ParseCsv\Csv;
 
 if (!defined('ABSPATH')) {
 	exit;
 }
 
 class Importer {
-
-	/**
-	* @param string $admin_url
-	*/
-	public function __construct() {
-		require EM_IMPEXP_PLUGIN_ROOT . 'lib/parsecsv/parsecsv.lib.php';
-	}
 
 	/**
 	* render the admin page
@@ -361,7 +355,7 @@ class Importer {
 		$eventCategories = self::getEventCategories();
 		$eventCountries = self::getEventCountries();
 
-		$csv = new parseCSV();
+		$csv = new Csv();
 		$csv->fields = $header;
 
 		while ($line = fgets($fp)) {
