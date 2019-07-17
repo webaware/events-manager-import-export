@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 	<h2>Import Events</h2>
 
 	<p>Import a file of events exported from Events Manager Import/Export plugin on another website.</p>
-	<form action="<?php echo esc_url($url); ?>" method="post" enctype="multipart/form-data">
+	<form action="<?= esc_url($admin_url); ?>" method="post" enctype="multipart/form-data">
 	<table class="form-table">
 
 		<tr>

@@ -1,18 +1,14 @@
 <?php
+namespace webaware\em_import_export;
 
 if (!defined('ABSPATH')) {
 	exit;
 }
 
 /**
-* custom exception class
-*/
-class EM_ImpExpImportException extends Exception {}
-
-/**
 * plugin controller
 */
-class EM_ImpExpPlugin {
+class Plugin {
 
 	/**
 	* static method for getting the instance of this singleton object
@@ -29,24 +25,22 @@ class EM_ImpExpPlugin {
 	}
 
 	/**
-	* private constructor; can only instantiate via getInstance() class method
+	* hide constructor
 	*/
-	private function __construct() {
-		add_action('init', array($this, 'init'));
-		add_action('admin_menu', array($this, 'addAdminMenu'), 20);
+	private function __construct() {}
+
+	/**
+	* initialise plugin
+	*/
+	public function pluginStart() {
+		add_action('admin_menu', [$this, 'addAdminMenu'], 20);
 
 		// register import/export actions
-		add_action('admin_post_em_impexp_export', array($this, 'exportEvents'));
+		add_action('admin_post_em_impexp_export', [$this, 'exportEvents']);
 
 		// handle automatic updates
 		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpUpdates.php';
-		new EM_ImpExpUpdates();
-	}
-
-	/**
-	* initialise plug-in
-	*/
-	public function init() {
+		new Updater();
 	}
 
 	/**
@@ -54,8 +48,8 @@ class EM_ImpExpPlugin {
 	*/
 	public function addAdminMenu() {
 		if (defined('EM_POST_TYPE_EVENT')) {
-			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Import', 'Import', 'activate_plugins', 'events-manager-import', array($this, 'importAdmin'));
-			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Export', 'Export', 'activate_plugins', 'events-manager-export', array($this, 'exportAdmin'));
+			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Import', 'Import', 'activate_plugins', 'events-manager-import', [$this, 'importAdmin']);
+			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Export', 'Export', 'activate_plugins', 'events-manager-export', [$this, 'exportAdmin']);
 		}
 	}
 
@@ -63,10 +57,11 @@ class EM_ImpExpPlugin {
 	* handle menu item for import
 	*/
 	public function importAdmin() {
+		$admin_url = add_query_arg(['post_type' => EM_POST_TYPE_EVENT, 'page' => 'events-manager-import'], admin_url('edit.php'));
+
 		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpImport.php';
-		require EM_IMPEXP_PLUGIN_ROOT . 'lib/parsecsv/parsecsv.lib.php';
-		$admin = new EM_ImpExpImport($this, 'events-manager-import');
-		$admin->render();
+		$admin = new Importer();
+		$admin->render($admin_url);
 	}
 
 	/**
@@ -74,7 +69,7 @@ class EM_ImpExpPlugin {
 	*/
 	public function exportAdmin() {
 		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpExport.php';
-		$admin = new EM_ImpExpExport($this);
+		$admin = new Exporter();
 		$admin->render();
 	}
 
@@ -83,24 +78,8 @@ class EM_ImpExpPlugin {
 	*/
 	public function exportEvents() {
 		require EM_IMPEXP_PLUGIN_ROOT . 'includes/class.EM_ImpExpExport.php';
-		$admin = new EM_ImpExpExport($this);
+		$admin = new Exporter();
 		$admin->export();
-	}
-
-	/**
-	* display a message (already HTML-conformant)
-	* @param string $msg HTML-encoded message to display inside a paragraph
-	*/
-	public static function showMessage($msg) {
-		echo "<div class='updated fade'><p><strong>$msg</strong></p></div>\n";
-	}
-
-	/**
-	* display an error message (already HTML-conformant)
-	* @param string $msg HTML-encoded message to display inside a paragraph
-	*/
-	public static function showError($msg) {
-		echo "<div class='error'><p><strong>$msg</strong></p></div>\n";
 	}
 
 }

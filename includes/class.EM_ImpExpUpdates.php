@@ -1,4 +1,7 @@
 <?php
+namespace webaware\em_import_export;
+
+use stdClass;
 
 if (!defined('ABSPATH')) {
 	exit;
@@ -7,21 +10,21 @@ if (!defined('ABSPATH')) {
 /**
 * automatic updates
 */
-class EM_ImpExpUpdates {
+class Updater {
 
 	const TRANSIENT_UPDATE_INFO		= 'em_import_export_update_info';
 	const URL_UPDATE_INFO			= 'https://rawgit.com/webaware/events-manager-import-export/master/latest.json';
 
-	function __construct() {
+	public function __construct() {
 		// check for plugin updates
-		add_action('admin_init', array($this, 'maybeShowChangelog'));
-		add_filter('pre_set_site_transient_update_plugins', array($this, 'checkPluginUpdates'));
-		add_filter('plugins_api', array($this, 'getPluginInfo'), 20, 3);	// NB: priority set to get called after EMPro
-		add_action('plugins_loaded', array($this, 'clearPluginInfo'));
+		add_action('admin_init', [$this, 'maybeShowChangelog']);
+		add_filter('pre_set_site_transient_update_plugins', [$this, 'checkPluginUpdates']);
+		add_filter('plugins_api', [$this, 'getPluginInfo'], 20, 3);	// NB: priority set to get called after EMPro
+		add_action('plugins_loaded', [$this, 'clearPluginInfo']);
 
 		// on multisite, must add new version notification ourselves...
 		if (is_multisite() && !is_network_admin()) {
-			add_action('after_plugin_row_' . EM_IMPEXP_PLUGIN_NAME, array($this, 'showUpdateNotification'), 10, 2);
+			add_action('after_plugin_row_' . EM_IMPEXP_PLUGIN_NAME, [$this, 'showUpdateNotification'], 10, 2);
 		}
 	}
 
@@ -143,19 +146,20 @@ class EM_ImpExpUpdates {
 		if (empty($info)) {
 			delete_site_transient(self::TRANSIENT_UPDATE_INFO);
 
-			$url = add_query_arg(array('v' => time()), self::URL_UPDATE_INFO);
-			$response = wp_remote_get($url, array('timeout' => 60));
+			$url = add_query_arg(['v' => time()], self::URL_UPDATE_INFO);
+			$response = wp_remote_get($url, ['timeout' => 60]);
 
 			if (is_wp_error($response)) {
 				return false;
 			}
 
-			if ($response && isset($response['body'])) {
+			if ($response) {
 				// load and decode JSON from response body
-				$info = json_decode($response['body']);
+				$body = wp_remote_retrieve_body($response);
+				$info = json_decode($body);
 
 				if ($info) {
-					$sections = array();
+					$sections = [];
 					foreach ($info->sections as $name => $data) {
 						$sections[$name] = $data;
 					}
@@ -175,7 +179,7 @@ class EM_ImpExpUpdates {
 	public function maybeShowChangelog() {
 		if (!empty($_REQUEST['em_import_export_changelog']) && !empty($_REQUEST['plugin']) && !empty($_REQUEST['slug'])) {
 			if (!current_user_can('update_plugins')) {
-				wp_die(__('You do not have sufficient permissions to update plugins for this site.'), __('Error'), array('response' => 403));
+				wp_die(__('You do not have sufficient permissions to update plugins for this site.'), __('Error'), ['response' => 403]);
 			}
 
 			global $tab, $body_id;

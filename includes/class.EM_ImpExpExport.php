@@ -1,19 +1,14 @@
 <?php
+namespace webaware\em_import_export;
+
+use EM_Events;
+use XMLWriter;
 
 if (!defined('ABSPATH')) {
 	exit;
 }
 
-class EM_ImpExpExport {
-
-	protected $plugin;
-
-	/**
-	* @param EM_ImpExpPlugin $plugin handle to the plugin object
-	*/
-	public function __construct($plugin) {
-		$this->plugin = $plugin;
-	}
+class Exporter {
 
 	/**
 	* render the admin page
@@ -86,7 +81,7 @@ class EM_ImpExpExport {
 			$xml->startElement('vevent');
 
 			// manufacture a unique ID
-			$xml->writeElement('uid', self::getUniqueID($EM_Event));
+			$xml->writeElement('uid', get_em_unique_id($EM_Event));
 
 			// add link to event post
 			$xml->writeElement('url', $EM_Event->output('#_EVENTURL'));
@@ -111,7 +106,7 @@ class EM_ImpExpExport {
 			// get categories as comma-separated list
 			$cats = $EM_Event->get_categories()->categories;
 			if (count($cats) > 0) {
-				$categories = array();
+				$categories = [];
 				foreach ($cats as $cat) {
 					$categories[] = $cat->output('#_CATEGORYNAME');
 				}
@@ -185,7 +180,7 @@ class EM_ImpExpExport {
 					$xml->startElement('rrule');
 					$xml->startElement('recur');
 
-					$days = array('SU','MO','TU','WE','TH','FR','SA');
+					$days = ['SU','MO','TU','WE','TH','FR','SA'];
 					$until = date('Y-m-d\TH:i:s\Z', $recurrence->end - $gmtOffset);
 
 					switch ($recurrence->freq) {
@@ -197,7 +192,7 @@ class EM_ImpExpExport {
 
 						case 'weekly':
 							$bydays = explode(',', $recurrence->byday);
-							$BYDAY = array();
+							$BYDAY = [];
 							foreach ($bydays as $day) {
 								$BYDAY[] = $days[$day];
 							}
@@ -248,8 +243,8 @@ class EM_ImpExpExport {
 		nocache_headers();
 
 		// character conversion arrays
-		$charFrom = array('\\', ';', ',', "\n", "\t");
-		$charTo = array('\\\\', '\;', '\,', '\\n', '\\t');
+		$charFrom = ['\\', ';', ',', "\n", "\t"];
+		$charTo = ['\\\\', '\;', '\,', '\\n', '\\t'];
 
 		// output header
 		echo "BEGIN:VCALENDAR\n";
@@ -262,11 +257,11 @@ class EM_ImpExpExport {
 		foreach ($EM_Events as $EM_Event) {
 
 			// build array of iCalendar lines, and start event
-			$ics = array();
+			$ics = [];
 			echo "BEGIN:VEVENT\n";
 
 			// manufacture a unique ID
-			$ics[] = 'UID:' . self::getUniqueID($EM_Event);
+			$ics[] = 'UID:' . get_em_unique_id($EM_Event);
 
 			// add link to event post
 			$ics[] = 'URL:' . $EM_Event->output('#_EVENTURL');
@@ -279,13 +274,13 @@ class EM_ImpExpExport {
 			if (is_object($location)) {
 				if (empty($location->location_name)) {
 
-					$parts = array (
+					$parts = [
 						$location->location_address,
 						$location->location_town,
 						$location->location_state,
 						$location->location_postcode,
 						$location->get_country(),
-					);
+					];
 					$address = implode(', ', array_filter($parts, 'strlen'));
 
 					$ics[] = 'LOCATION:' . str_replace($charFrom, $charTo, $address);
@@ -305,7 +300,7 @@ class EM_ImpExpExport {
 			// get categories as comma-separated list
 			$cats = $EM_Event->get_categories()->categories;
 			if (count($cats) > 0) {
-				$categories = array();
+				$categories = [];
 				foreach ($cats as $cat) {
 					$categories[] = str_replace($charFrom, $charTo, $cat->output('#_CATEGORYNAME'));
 				}
@@ -317,7 +312,7 @@ class EM_ImpExpExport {
 			if (!$EM_Event->is_individual()) {
 				$recurrence = $EM_Event->get_event_recurrence();
 				if (!empty($recurrence)) {
-					$days = array('SU','MO','TU','WE','TH','FR','SA');
+					$days = ['SU','MO','TU','WE','TH','FR','SA'];
 					$until = date('Ymd\THis\Z', $recurrence->end - $gmtOffset);
 
 					switch ($recurrence->freq) {
@@ -327,7 +322,7 @@ class EM_ImpExpExport {
 
 						case 'weekly':
 							$bydays = explode(',', $recurrence->byday);
-							$BYDAY = array();
+							$BYDAY = [];
 							foreach ($bydays as $day) {
 								$BYDAY[] = $days[$day];
 							}
@@ -385,16 +380,16 @@ class EM_ImpExpExport {
 		foreach ($EM_Events as $EM_Event) {
 			echo '1,';
 
-			echo self::text2csv($EM_Event->event_name), ',';							// event_name
-			echo self::text2csv(preg_replace('/\s+/', ' ', strip_tags($EM_Event->post_content))), ',';				// event_desc
+			echo text_to_csv($EM_Event->event_name), ',';							// event_name
+			echo text_to_csv(preg_replace('/\s+/', ' ', strip_tags($EM_Event->post_content))), ',';				// event_desc
 
 			$location = $EM_Event->get_location();
 			if (is_object($location)) {
-				echo self::text2csv($location->location_address), ',';					// address
-				echo self::text2csv($location->location_town), ',';						// city
-				echo self::text2csv($location->location_state), ',';					// state
-				echo self::text2csv($location->get_country()), ',';						// country
-				echo self::text2csv($location->location_postcode), ',';					// zip
+				echo text_to_csv($location->location_address), ',';					// address
+				echo text_to_csv($location->location_town), ',';						// city
+				echo text_to_csv($location->location_state), ',';					// state
+				echo text_to_csv($location->get_country()), ',';						// country
+				echo text_to_csv($location->location_postcode), ',';					// zip
 			}
 			else {
 				echo ',,,,,';
@@ -403,13 +398,13 @@ class EM_ImpExpExport {
 			echo ',';																	// phone
 
 			echo 'Y,';																	// display_desc
-			echo self::text2csv(self::getUniqueID($EM_Event)), ',';						// event_identifier
+			echo text_to_csv(get_em_unique_id($EM_Event)), ',';						// event_identifier
 
 			$gmtOffset = HOUR_IN_SECONDS * get_option('gmt_offset');
-			echo self::text2csv(date('Y-m-d', $EM_Event->start - $gmtOffset)), ',';		// start_date
-			echo self::text2csv(date('Y-m-d', $EM_Event->end - $gmtOffset)), ',';		// end_date
-			echo self::text2csv(date('H:i:s', $EM_Event->start - $gmtOffset)), ',';		// start_time
-			echo self::text2csv(date('H:i:s', $EM_Event->end - $gmtOffset)), ',';		// end_time
+			echo text_to_csv(date('Y-m-d', $EM_Event->start - $gmtOffset)), ',';		// start_date
+			echo text_to_csv(date('Y-m-d', $EM_Event->end - $gmtOffset)), ',';		// end_date
+			echo text_to_csv(date('H:i:s', $EM_Event->start - $gmtOffset)), ',';		// start_time
+			echo text_to_csv(date('H:i:s', $EM_Event->end - $gmtOffset)), ',';		// end_time
 
 			echo '100,';	// reg_limit
 			echo '0,';	// event_cost
@@ -418,34 +413,11 @@ class EM_ImpExpExport {
 			echo 'N,';	// send_mail
 			echo 'Y,';	// is_active
 			echo ',';	// conf_mail
-			echo self::text2csv(date('Y-m-d', $EM_Event->start - $gmtOffset)), ',';	// registration_start
-			echo self::text2csv($EM_Event->event_rsvp_date), "\r\n";	// registration_end
+			echo text_to_csv(date('Y-m-d', $EM_Event->start - $gmtOffset)), ',';	// registration_start
+			echo text_to_csv($EM_Event->event_rsvp_date), "\r\n";	// registration_end
 		}
 
 		exit;
-	}
-
-	/**
-	* encapsulate text in quotes if unsuitable for CSV without quotes
-	* NB: Events Espresso is highly dodgy and doesn't handle apostrophes, so must convert!
-	* @param string $text
-	* @return string
-	*/
-	protected static function text2csv($text) {
-		$len = strlen($text);
-		if ($len > 0 && $len != strcspn($text, "\"',;$\\\r\n0123456789"))
-			return '"' . strtr(str_replace('"', '""', $text), "'", '`') . '"';
-
-		return $text;
-	}
-
-	/**
-	* generate unique ID for event
-	* @param EM_Event $EM_Event
-	* @return string
-	*/
-	protected static function getUniqueID($EM_Event) {
-		return "events-manager-{$EM_Event->event_id}@" . parse_url(get_option('home'), PHP_URL_HOST);
 	}
 
 }

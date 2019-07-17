@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 <div class='wrap'>
 	<h2>Export Events</h2>
 
-	<form action="<?php echo admin_url('admin-post.php'); ?>" method="POST" id="em-impexp-export-frm">
+	<form action="<?= esc_url(admin_url('admin-post.php')); ?>" method="POST" id="em-impexp-export-frm">
 		<input type="hidden" name="action" value="em_impexp_export" />
 
 		<table class="form-table">
