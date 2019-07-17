@@ -12,13 +12,19 @@ if (!defined('ABSPATH')) {
 */
 class Updater {
 
-	const TRANSIENT_UPDATE_INFO		= 'em_import_export_update_info';
-	const URL_UPDATE_INFO			= 'https://rawgit.com/webaware/events-manager-import-export/master/latest.json';
-	const CHANGELOG_QUERY_PARAM		= 'em_import_export_changelog';
+	protected $name;
+	protected $filepath;
+	protected $slug;
+	protected $update_url;
+	protected $transient;
 
-	public $name = EM_IMPEXP_PLUGIN_NAME;
+	public function __construct($name, $filepath, $args) {
+		$this->name				= $name;
+		$this->filepath			= $filepath;
+		$this->slug				= $args['slug'];
+		$this->update_url		= $args['update_url'];
+		$this->transient		= "{$this->slug}_update_info";
 
-	public function __construct() {
 		// check for plugin updates
 		add_action('admin_init', [$this, 'maybeShowChangelog']);
 		add_filter('pre_set_site_transient_update_plugins', [$this, 'checkPluginUpdates']);
@@ -27,7 +33,7 @@ class Updater {
 
 		// on multisite, must add new version notification ourselves...
 		if (is_multisite() && !is_network_admin()) {
-			add_action('after_plugin_row_' . EM_IMPEXP_PLUGIN_NAME, [$this, 'showUpdateNotification'], 10, 2);
+			add_action("after_plugin_row_{$name}", [$this, 'showUpdateNotification'], 10, 2);
 		}
 	}
 
@@ -56,7 +62,7 @@ class Updater {
 			$update->package		= $latest->download_link;
 			$update->upgrade_notice	= $latest->upgrade_notice;
 
-			$plugins->response[EM_IMPEXP_PLUGIN_NAME] = $update;
+			$plugins->response[$this->name] = $update;
 		}
 
 		return $plugins;
@@ -70,7 +76,7 @@ class Updater {
 	* @return bool|object
 	*/
 	public function getPluginInfo($false, $action, $args) {
-		if (isset($args->slug) && $args->slug === basename(EM_IMPEXP_PLUGIN_NAME, '.php') && $action === 'plugin_information') {
+		if (isset($args->slug) && $args->slug === $this->slug && $action === 'plugin_information') {
 			return $this->getLatestVersionInfo();
 		}
 
@@ -83,8 +89,8 @@ class Updater {
 	public function clearPluginInfo() {
 		global $pagenow;
 
-		if (!empty($_GET['force-check']) && !empty($pagenow) && $pagenow === 'update-core.php') {
-			delete_site_transient(self::TRANSIENT_UPDATE_INFO);
+		if (!empty($_GET['force-check']) && !empty($pagenow) && ($pagenow === 'update-core.php' || $pagenow === 'plugins.php')) {
+			delete_site_transient($this->transient);
 		}
 	}
 
@@ -114,7 +120,7 @@ class Updater {
 			$plugin_slug   = esc_html( $info->slug );
 			$new_version   = esc_html( $info->new_version );
 
-			$changelog_link = self_admin_url(sprintf('index.php?%1$s=1&plugin=%2$s&slug=%2$s&TB_iframe=true', self::CHANGELOG_QUERY_PARAM, $info->slug));
+			$changelog_link = self_admin_url(sprintf('index.php?plugin=%1$s&slug=%1$s&TB_iframe=true', $info->slug));
 
 			include EM_IMPEXP_PLUGIN_ROOT . 'views/admin-plugin-update.php';
 		}
@@ -126,7 +132,7 @@ class Updater {
 	*/
 	protected function getPluginData() {
 		if (empty($this->pluginData)) {
-			$this->pluginData = get_plugin_data(EM_IMPEXP_PLUGIN_FILE);
+			$this->pluginData = get_plugin_data($this->filepath);
 		}
 
 		return $this->pluginData;
@@ -140,13 +146,13 @@ class Updater {
 	protected function getLatestVersionInfo($cache = true) {
 		$info = false;
 		if ($cache) {
-			$info = get_site_transient(self::TRANSIENT_UPDATE_INFO);
+			$info = get_site_transient($this->transient);
 		}
 
 		if (empty($info)) {
-			delete_site_transient(self::TRANSIENT_UPDATE_INFO);
+			delete_site_transient($this->transient);
 
-			$url = add_query_arg(['v' => time()], self::URL_UPDATE_INFO);
+			$url = add_query_arg(['v' => time()], $this->update_url);
 			$response = wp_remote_get($url, ['timeout' => 15]);
 
 			if (is_wp_error($response)) {
@@ -154,7 +160,6 @@ class Updater {
 			}
 
 			if ($response) {
-				// load and decode JSON from response body
 				$info = json_decode(wp_remote_retrieve_body($response));
 
 				if ($info) {
@@ -164,7 +169,7 @@ class Updater {
 					}
 					$info->sections = $sections;
 
-					set_site_transient(self::TRANSIENT_UPDATE_INFO, $info, HOUR_IN_SECONDS * 6);
+					set_site_transient($this->transient, $info, HOUR_IN_SECONDS * 6);
 				}
 			}
 		}
@@ -176,7 +181,7 @@ class Updater {
 	* maybe show the plugin changelog from update info
 	*/
 	public function maybeShowChangelog() {
-		if (!empty($_REQUEST[self::CHANGELOG_QUERY_PARAM]) && !empty($_REQUEST['plugin']) && !empty($_REQUEST['slug'])) {
+		if (!empty($_REQUEST['plugin']) && !empty($_REQUEST['slug']) && $_REQUEST['slug'] === $this->slug) {
 			if (!current_user_can('update_plugins')) {
 				wp_die(translate('Sorry, you are not allowed to update plugins for this site.'), translate('Error'), ['response' => 403]);
 			}

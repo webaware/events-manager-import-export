@@ -39,7 +39,10 @@ class Plugin {
 		add_action('admin_post_em_impexp_export', [$this, 'exportEvents']);
 
 		// handle automatic updates
-		new Updater();
+		new Updater(EM_IMPEXP_PLUGIN_NAME, EM_IMPEXP_PLUGIN_FILE, [
+			'slug'			=> 'events-manager-import-export',
+			'update_url'	=> 'https://updates.webaware.net.au/events-manager-import-export/latest.json',
+		]);
 	}
 
 	/**
