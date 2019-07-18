@@ -35,6 +35,7 @@ class Plugin {
 	public function pluginStart() {
 		add_action('init', 'em_impexp_load_text_domain');
 		add_action('admin_menu', [$this, 'addAdminMenu'], 20);
+		add_filter('plugin_row_meta', [$this, 'pluginDetailsLinks'], 10, 2);
 
 		// register import/export actions
 		add_action('admin_post_em_impexp_export', [$this, 'exportEvents']);
@@ -83,6 +84,17 @@ class Plugin {
 	public function exportEvents() {
 		$admin = new Exporter();
 		$admin->export();
+	}
+
+	/**
+	* action hook for adding plugin details links
+	*/
+	public function pluginDetailsLinks($links, $file) {
+		if ($file === EM_IMPEXP_PLUGIN_NAME) {
+			$links[] = sprintf('<a href="https://translate.webaware.com.au/glotpress/projects/events-manager-import-export/" target="_blank" rel="noopener">%s</a>', esc_html_x('Translate', 'plugin details links', 'events-manager-import-export'));
+		}
+
+		return $links;
 	}
 
 }

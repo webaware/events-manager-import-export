@@ -6,6 +6,8 @@ Description: import and export function for Events Manager
 Version: 0.0.12
 Author: WebAware
 Author URI: https://shop.webaware.com.au/
+Text Domain: events-manager-import-export
+Domain Path: /languages/
 */
 
 /*
