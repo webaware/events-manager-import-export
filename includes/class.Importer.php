@@ -43,22 +43,22 @@ class Importer {
 					break;
 
 				case UPLOAD_ERR_NO_FILE:
-					$errmsg = '# no upload file selected.';
+					$errmsg = _x('No upload file selected.', 'error', 'events-manager-import-export');
 					break;
 
 				case UPLOAD_ERR_INI_SIZE:
 				case UPLOAD_ERR_FORM_SIZE:
-					$errmsg = '# error uploading file - file too big.';
+					$errmsg = _x('Error uploading file - file too big.', 'error', 'events-manager-import-export');
 					break;
 
 				default:
-					$errmsg = '# error uploading file.';
+					$errmsg = _x('Error uploading file.', 'error', 'events-manager-import-export');
 					break;
 
 			}
 		}
 		else {
-			$errmsg = '# no upload file selected.';
+			$errmsg = _x('No upload file selected.', 'error', 'events-manager-import-export');
 		}
 
 		if (empty($errmsg)) {
@@ -78,7 +78,7 @@ class Importer {
 				}
 			}
 			catch (ImportException $e) {
-				$errmsg = '# error importing events: ' . $e->getMessage();
+				$errmsg = sprintf(_x('Error importing events: %s', 'error', 'events-manager-import-export'), $e->getMessage());
 			}
 		}
 
@@ -97,7 +97,7 @@ class Importer {
 
 		$xml = new XMLReader();
 		if (!$xml->open($filepath, 'UTF-8')) {
-			throw new ImportException('error opening xCal file.');
+			throw new ImportException(_x("Can't open xCal file.", 'error', 'events-manager-import-export'));
 		}
 
 		$text = '';
@@ -315,7 +315,7 @@ class Importer {
 			}
 		}
 
-		show_admin_message(sprintf(_n('%s event loaded', '%s events loaded', $records), number_format_i18n($records)));
+		$this->showCount($records);
 	}
 
 	/**
@@ -328,22 +328,22 @@ class Importer {
 
 		$fp = fopen($filepath, 'r');
 		if ($fp === false) {
-			throw new ImportException('error opening CSV file');
+			throw new ImportException(_x("Can't open CSV file.", 'error', 'events-manager-import-export'));
 		}
 
 		// read first line of CSV to make sure it's the correct format -- fgetscsv is fine for this simple task!
 		$header = fgetcsv($fp);
 		if ($header === false) {
-			throw new ImportException('error reading import file or file is empty');
+			throw new ImportException(_x('error reading import file or file is empty', 'error', 'events-manager-import-export'));
 		}
 		if (is_null($header)) {
-			throw new ImportException('import file handle is null');
+			throw new ImportException(_x('import file handle is null', 'error', 'events-manager-import-export'));
 		}
 		if (!is_array($header)) {
-			throw new ImportException('import file did not scan as CSV');
+			throw new ImportException(_x('import file did not scan as CSV', 'error', 'events-manager-import-export'));
 		}
 		if (!in_array('summary', $header)) {
-			throw new ImportException('import file does not contain a field "summary"');
+			throw new ImportException(_x('import file does not contain a field "summary"', 'error', 'events-manager-import-export'));
 		}
 
 		$wpdb->query('start transaction');
@@ -465,7 +465,11 @@ class Importer {
 				# parse start time
 				$sevent = date_create_from_format($dtformat, $data['dtstart']);
 				if ($sevent === FALSE) {
-					die('invalid start date for ' . $data['summary'] . ": dtformat is $dtformat and start date is " . $data['dtstart']);
+					throw new ImportException(
+						/* translators: %1$s = event summary; %2$s = date format; %3$s = start date */
+						sprintf(_x('invalid start date for %1$s: dtformat is %2$s and start date is %3$s', 'error', 'events-manager-import-export'),
+							$data['summary'], $dtformat, $data['dtstart'])
+					);
 				}
 				$event->start = $sevent->getTimestamp();
 				$event->event_start_date = date('Y-m-d', $event->start);
@@ -474,7 +478,11 @@ class Importer {
 				# parse end time
 				$eevent = date_create_from_format($dtformat, $data['dtend']);
 				if ($eevent === FALSE) {
-					die('invalid end date for ' . $data['summary'] . ": dtformat is $dtformat and end date is " . $data['dtend']);
+					throw new ImportException(
+						/* translators: %1$s = event summary; %2$s = date format; %3$s = end date */
+						sprintf(_x('invalid start date for %1$s: dtformat is %2$s and start date is %3$s', 'error', 'events-manager-import-export'),
+							$data['summary'], $dtformat, $data['dtend'])
+					);
 				}
 				$event->end = $eevent->getTimestamp();
 				$event->event_end_date = date('Y-m-d', $event->end);
@@ -541,7 +549,15 @@ class Importer {
 
 		$wpdb->query('commit');
 
-		show_admin_message(sprintf(_n('%s event loaded', '%s events loaded', $records), number_format_i18n($records)));
+		$this->showCount($records);
+	}
+
+	/**
+	* show count of events loaded
+	* @param int $records
+	*/
+	protected function showCount($records) {
+		show_admin_message(sprintf(_nx('%s event loaded', '%s events loaded', $records, 'import', 'events-manager-import-export'), number_format_i18n($records)));
 	}
 
 	/**

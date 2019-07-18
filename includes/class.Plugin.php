@@ -33,6 +33,7 @@ class Plugin {
 	* initialise plugin
 	*/
 	public function pluginStart() {
+		add_action('init', 'em_impexp_load_text_domain');
 		add_action('admin_menu', [$this, 'addAdminMenu'], 20);
 
 		// register import/export actions
@@ -50,8 +51,11 @@ class Plugin {
 	*/
 	public function addAdminMenu() {
 		if (defined('EM_POST_TYPE_EVENT')) {
-			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Import', 'Import', 'activate_plugins', 'events-manager-import', [$this, 'importAdmin']);
-			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, 'Export', 'Export', 'activate_plugins', 'events-manager-export', [$this, 'exportAdmin']);
+			$label = _x('Import', 'admin menu', 'events-manager-import-export');
+			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, $label, $label, 'activate_plugins', 'events-manager-import', [$this, 'importAdmin']);
+
+			$label = _x('Export', 'admin menu', 'events-manager-import-export');
+			add_submenu_page('edit.php?post_type='.EM_POST_TYPE_EVENT, $label, $label, 'activate_plugins', 'events-manager-export', [$this, 'exportAdmin']);
 		}
 	}
 
