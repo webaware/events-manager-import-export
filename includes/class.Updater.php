@@ -30,6 +30,7 @@ class Updater {
 		add_filter('pre_set_site_transient_update_plugins', [$this, 'checkPluginUpdates']);
 		add_filter('plugins_api', [$this, 'getPluginInfo'], 20, 3);	// NB: priority set to get called after EMPro
 		add_action('plugins_loaded', [$this, 'clearPluginInfo']);
+		add_filter('plugin_row_meta', [$this, 'pluginDetailsLink'], 5, 3);
 
 		// on multisite, must add new version notification ourselves...
 		if (is_multisite() && !is_network_admin()) {
@@ -120,10 +121,55 @@ class Updater {
 			$plugin_slug   = esc_html( $info->slug );
 			$new_version   = esc_html( $info->new_version );
 
-			$changelog_link = self_admin_url(sprintf('index.php?plugin=%1$s&slug=%1$s&TB_iframe=true', $info->slug));
+			$changelog_link = $this->getPluginDetailsLink();
 
 			include EM_IMPEXP_PLUGIN_ROOT . 'views/admin-plugin-update.php';
 		}
+	}
+
+	/**
+	 * maybe change the View Details link on the plugin page
+	 *
+	 * @param array   $links
+	 * @param string  $file
+	 * @param array   $plugin_data
+	 */
+	public function pluginDetailsLink( $links, $file, $plugin_data ) {
+		if ( $this->name === $file && is_multisite() && current_user_can( 'install_plugins' ) ) {
+
+			$plugin_uri = empty($plugin_data['PluginURI']) ? false : $plugin_data['PluginURI'];
+
+			foreach ($links as $key => $link) {
+				// look for View Details link, replace with our View Details link if found
+				if (strpos($link, 'plugin-install.php?tab=plugin-information') !== false) {
+					$links[$key] = preg_replace_callback('#href="\K[^"]+#', [$this, 'getPluginDetailsLink'], $link);
+					break;
+				}
+
+				// look for Visit Plugin Site link, replace with our link if found
+				if ($plugin_uri && strpos($link, $plugin_uri) !== false) {
+					$plugin_name = $this->api_data['link_title'];
+					$links[$key] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+							$this->getPluginDetailsLink(),
+							esc_attr( sprintf( translate( 'More information about %s' ), $plugin_name ) ),
+							esc_attr( $plugin_name ),
+							translate( 'View details' )
+						);
+					break;
+				}
+			}
+
+		}
+
+		return $links;
+	}
+
+	/**
+	* get custom link to view plugin details
+	* @return string
+	*/
+	public function getPluginDetailsLink() {
+		return esc_url(self_admin_url(sprintf('index.php?plugin=%1$s&slug=%1$s&TB_iframe=true', $this->slug)));
 	}
 
 	/**
