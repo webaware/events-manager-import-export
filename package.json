@@ -1,0 +1,30 @@
+{
+  "name": "events-manager-import-export",
+  "version": "0.0.12",
+  "description": "Events Manager Import Export",
+  "homepage": "https://github.com/webaware/events-manager-import-export",
+  "main": "Gruntfile.js",
+  "browserslist": [
+    "> 0.5%",
+    "ios >= 9.3.5",
+    "not dead"
+  ],
+  "devDependencies": {
+    "grunt": "^1.0.4",
+    "grunt-contrib-clean": "^2.0.0",
+    "grunt-contrib-compress": "^1.5.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-wp-i18n": "^1.0.3"
+  },
+  "translator": {
+    "name": "WebAware",
+    "email": "translate@webaware.com.au",
+    "url": "https://translate.webaware.com.au/glotpress/projects/events-manager-import-export/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webaware/events-manager-import-export"
+  },
+  "author": "WebAware https://shop.webaware.com.au/",
+  "license": "GPL-2.0"
+}
