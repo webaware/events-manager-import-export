@@ -7,6 +7,7 @@ See GitHub for [the complete changelog](https://github.com/webaware/events-manag
 ### 0.0.12, soon...
 
 * changed: requires PHP 5.6+ (recommend PHP 7.2+)
+* changed: Google Maps lookup is removed for now, will return soon as an Ajax-driven process post-import
 * changed: parsecsv upgraded to v1.0.0
 * merged: [@asmartin pull request](https://github.com/webaware/events-manager-import-export/pull/1); thanks!
   - post_id is now required in the database, so add it
