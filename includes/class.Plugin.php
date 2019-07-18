@@ -43,6 +43,7 @@ class Plugin {
 		// handle automatic updates
 		new Updater(EM_IMPEXP_PLUGIN_NAME, EM_IMPEXP_PLUGIN_FILE, [
 			'slug'			=> 'events-manager-import-export',
+			'plugin_title'	=> __('Events Manager Import Export', 'events-manager-import-export'),
 			'update_url'	=> 'https://updates.webaware.net.au/events-manager-import-export/latest.json',
 		]);
 	}

@@ -22,6 +22,7 @@ class Updater {
 		$this->name				= $name;
 		$this->filepath			= $filepath;
 		$this->slug				= $args['slug'];
+		$this->plugin_title		= $args['plugin_title'];
 		$this->update_url		= $args['update_url'];
 		$this->transient		= "{$this->slug}_update_info";
 
@@ -148,11 +149,10 @@ class Updater {
 
 				// look for Visit Plugin Site link, replace with our link if found
 				if ($plugin_uri && strpos($link, $plugin_uri) !== false) {
-					$plugin_name = $this->api_data['link_title'];
 					$links[$key] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
 							$this->getPluginDetailsLink(),
-							esc_attr( sprintf( translate( 'More information about %s' ), $plugin_name ) ),
-							esc_attr( $plugin_name ),
+							esc_attr( sprintf( translate( 'More information about %s' ), $this->plugin_title ) ),
+							esc_attr( $this->plugin_title ),
 							translate( 'View details' )
 						);
 					break;
