@@ -9,6 +9,8 @@ See GitHub for [the complete changelog](https://github.com/webaware/events-manag
 * changed: requires PHP 5.6+ (recommend PHP 7.2+)
 * changed: Google Maps lookup is removed for now, will return soon as an Ajax-driven process post-import
 * changed: parsecsv upgraded to v1.0.0
+* added: localisations for strings so that [plugin can now be translated](https://translate.webaware.com.au/glotpress/projects/events-manager-import-export/)
+* added: filters `em_impexp_import_content` and `em_impexp_import_excerpt` to allow filtering of the event content
 * merged: [@asmartin pull request](https://github.com/webaware/events-manager-import-export/pull/1); thanks!
   - post_id is now required in the database, so add it
   - verify new location matches existing by comparing postcodes

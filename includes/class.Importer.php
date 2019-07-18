@@ -193,8 +193,8 @@ class Importer {
 							$event->event_attributes['em_impexp_uid'] = $data['uid'];
 							$event->event_attributes['em_impexp_url'] = $data['url'];
 							$event->event_name = $data['summary'];
-							$event->post_content = $data['x-post_content'];
-							$event->post_excerpt = $data['x-post_excerpt'];
+							$event->post_content = apply_filters('em_impexp_import_content', $data['x-post_content'], $data, 'xCal');
+							$event->post_excerpt = apply_filters('em_impexp_import_excerpt', $data['x-post_excerpt'], $data, 'xCal');
 							if ($data['dtstart']) {
 								$event->start = strtotime($data['dtstart']);
 								$event->event_start_date = date('Y-m-d', $event->start);
@@ -455,8 +455,8 @@ class Importer {
 				$event->event_attributes['em_impexp_uid'] = $data['uid'];
 				$event->event_attributes['em_impexp_url'] = $data['url'];
 				$event->event_name = $data['summary'];
-				$event->post_content = $data['post_content'];
-				$event->post_excerpt = $data['post_excerpt'];
+				$event->post_content = apply_filters('em_impexp_import_content', $data['post_content'], $data, 'csv');
+				$event->post_excerpt = apply_filters('em_impexp_import_excerpt', $data['post_excerpt'], $data, 'csv');
 				$dtformat = 'd/m/Y H:i:s';
 				if (isset($data['dtformat']) && !empty($data['dtformat'])) {
 					$dtformat = $data['dtformat'];
