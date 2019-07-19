@@ -40,6 +40,9 @@ class Plugin {
 		// register import/export actions
 		add_action('admin_post_em_impexp_export', [$this, 'exportEvents']);
 
+		// hook some filters in Events Manager
+		add_filter('em_get_attributes', __NAMESPACE__ . '\\add_custom_event_attributes', 10, 3);
+
 		// handle automatic updates
 		new Updater(EM_IMPEXP_PLUGIN_NAME, EM_IMPEXP_PLUGIN_FILE, [
 			'slug'			=> 'events-manager-import-export',

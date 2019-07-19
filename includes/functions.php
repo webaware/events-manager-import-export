@@ -7,6 +7,10 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
+// custom event attributes used by import/export
+const EVENT_ATTR_UID		= '_em_impexp_uid';
+const EVENT_ATTR_URL		= '_em_impexp_url';
+
 /**
 * custom exception class
 */
@@ -51,4 +55,23 @@ function text_to_csv($text) {
 */
 function get_em_unique_id($EM_Event) {
 	return "events-manager-{$EM_Event->event_id}@" . parse_url(get_option('home'), PHP_URL_HOST);
+}
+
+/**
+* add our custom event attributes to Event Manager's known attributes
+* @param array $attrs
+* @param array $matches
+* @param bool $is_for_location
+* @return array
+*/
+function add_custom_event_attributes($attrs, $matches, $is_for_location) {
+	if (!$is_for_location) {
+		$attrs['names'][] = EVENT_ATTR_UID;
+		$attrs['names'][] = EVENT_ATTR_URL;
+
+		$attrs['values'][EVENT_ATTR_UID] = [];
+		$attrs['values'][EVENT_ATTR_URL] = [];
+	}
+
+	return $attrs;
 }

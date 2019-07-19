@@ -175,14 +175,8 @@ class Importer {
 							// try to find existing event with matching unique ID first, so can update it
 							$event = false;
 							if ($data['uid']) {
-								add_filter('em_events_get_default_search', [__CLASS__, 'filterEventArgs'], 10, 2);
-								add_filter('em_events_build_sql_conditions', [__CLASS__, 'filterEventSQL'], 10, 2);
-
-								$event = EM_Events::get(['em_impexp_uid' => $data['uid']]);
+								$event = EM_Events::get([EVENT_ATTR_UID => $data['uid']]);
 								$event = empty($event[0]) ? false : $event[0];
-
-								remove_filter('em_events_get_default_search', [__CLASS__, 'filterEventArgs'], 10, 2);
-								remove_filter('em_events_build_sql_conditions', [__CLASS__, 'filterEventSQL'], 10, 2);
 							}
 							if (!$event) {
 								// must create a new event
@@ -190,8 +184,8 @@ class Importer {
 							}
 							$event->post_id = $data['uid'];	// post_id is now NOT NULL
 							$event->location_id = $location ? $location->location_id : 0;
-							$event->event_attributes['em_impexp_uid'] = $data['uid'];
-							$event->event_attributes['em_impexp_url'] = $data['url'];
+							$event->event_attributes[EVENT_ATTR_UID] = $data['uid'];
+							$event->event_attributes[EVENT_ATTR_URL] = $data['url'];
 							$event->event_name = $data['summary'];
 							$event->post_content = apply_filters('em_impexp_import_content', $data['x-post_content'], $data, 'xCal');
 							$event->post_excerpt = apply_filters('em_impexp_import_excerpt', $data['x-post_excerpt'], $data, 'xCal');
@@ -252,7 +246,7 @@ class Importer {
 										}
 
 										if ($cat) {
-											$eventcats->categories[$cat->id] = $cat;
+											$eventcats->terms[$cat->id] = $cat;
 										}
 									}
 									$eventcats->save();
@@ -437,14 +431,8 @@ class Importer {
 				// try to find existing event with matching unique ID first, so can update it
 				$event = false;
 				if ($data['uid']) {
-					add_filter('em_events_get_default_search', [__CLASS__, 'filterEventArgs'], 10, 2);
-					add_filter('em_events_build_sql_conditions', [__CLASS__, 'filterEventSQL'], 10, 2);
-
-					$event = EM_Events::get(['em_impexp_uid' => $data['uid']]);
+					$event = EM_Events::get([EVENT_ATTR_UID => $data['uid']]);
 					$event = count($event) > 0 ? $event[0] : false;
-
-					remove_filter('em_events_get_default_search', [__CLASS__, 'filterEventArgs'], 10, 2);
-					remove_filter('em_events_build_sql_conditions', [__CLASS__, 'filterEventSQL'], 10, 2);
 				}
 				if (!$event) {
 					// must create a new event
@@ -452,8 +440,8 @@ class Importer {
 				}
 				$event->post_id = $data['uid']; // post_id is now NOT NULL
 				$event->location_id = $location ? $location->location_id : 0;
-				$event->event_attributes['em_impexp_uid'] = $data['uid'];
-				$event->event_attributes['em_impexp_url'] = $data['url'];
+				$event->event_attributes[EVENT_ATTR_UID] = $data['uid'];
+				$event->event_attributes[EVENT_ATTR_URL] = $data['url'];
 				$event->event_name = $data['summary'];
 				$event->post_content = apply_filters('em_impexp_import_content', $data['post_content'], $data, 'csv');
 				$event->post_excerpt = apply_filters('em_impexp_import_excerpt', $data['post_excerpt'], $data, 'csv');
@@ -536,7 +524,7 @@ class Importer {
 							}
 
 							if ($cat) {
-								$eventcats->categories[$cat->id] = $cat;
+								$eventcats->terms[$cat->id] = $cat;
 							}
 						}
 						$eventcats->save();
@@ -647,36 +635,6 @@ class Importer {
 		$location = empty($locations[$location_name]) ? false : new EM_Location($locations[$location_name]);
 
 		return $location;
-	}
-
-	/**
-	* filter the search arguments for an events search, to restore the em_impexp_uid argument
-	* @param array $filtered assoc. array of filtered arguments used for search
-	* @param array $args assoc. array of original search arguments
-	* @return array
-	*/
-	public static function filterEventArgs($filtered, $args) {
-		if (isset($args['em_impexp_uid'])) {
-			$filtered['em_impexp_uid'] = $args['em_impexp_uid'];
-		}
-
-		return $filtered;
-	}
-
-	/**
-	* filter the SQL where clause conditions for an events search, to include em_impexp_uid
-	* @param array $conditions where clause conditions
-	* @param array $args assoc. array of search arguments
-	* @return array
-	*/
-	public static function filterEventSQL($conditions, $args) {
-		if (isset($args['em_impexp_uid'])) {
-			$em_events_table = EM_EVENTS_TABLE;
-			$uid = esc_sql($args['em_impexp_uid']);
-			$conditions[] = "($em_events_table.event_attributes regexp '\"em_impexp_uid\";s:\[0-9\]+:\"$uid\"')";
-		}
-
-		return $conditions;
 	}
 
 	/**
