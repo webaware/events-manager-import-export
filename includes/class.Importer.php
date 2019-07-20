@@ -1,6 +1,7 @@
 <?php
 namespace webaware\em_import_export;
 
+use DateTimeZone;
 use EM_Categories;
 use EM_Category;
 use EM_Event;
@@ -108,6 +109,8 @@ class Importer {
 		$eventCategories = self::getEventCategories();
 		$eventCountries = self::getEventCountries();
 
+		$timezone = new DateTimeZone(get_option('timezone_string'));
+
 		while ($xml->read()) {
 			switch ($xml->nodeType) {
 
@@ -119,6 +122,7 @@ class Importer {
 							'summary' => '',
 							'dtstart' => '',
 							'dtend' => '',
+							'dtstamp' => '',
 							'categories' => '',
 							'freq' => '',
 							'byday' => '',
@@ -189,18 +193,28 @@ class Importer {
 							$event->event_name = $data['summary'];
 							$event->post_content = apply_filters('em_impexp_import_content', $data['x-post_content'], $data, 'xCal');
 							$event->post_excerpt = apply_filters('em_impexp_import_excerpt', $data['x-post_excerpt'], $data, 'xCal');
+
 							if ($data['dtstart']) {
-								$event->start = strtotime($data['dtstart']);
-								$event->event_start_date = date('Y-m-d', $event->start);
-								$event->event_start_time = date('H:i:s', $event->start);
+								$time_start = date_create_from_format('Y-m-d\TH:i:sT', $data['dtstart']);
+								$time_start->setTimezone($timezone);
+								$event->event_start_date = $time_start->format('Y-m-d');
+								$event->event_start_time = $time_start->format('H:i:s');
+								$event->start()->setTimestamp($time_start->getTimestamp());
 							}
 							if ($data['dtend']) {
-								$event->end = strtotime($data['dtend']);
-								$event->event_end_date = date('Y-m-d', $event->end);
-								$event->event_end_time = date('H:i:s', $event->end);
+								$time_end = date_create_from_format('Y-m-d\TH:i:sT', $data['dtend']);
+								$time_end->setTimezone($timezone);
+								$event->event_end_date = $time_end->format('Y-m-d');
+								$event->event_end_time = $time_end->format('H:i:s');
+								$event->end()->setTimestamp($time_end->getTimestamp());
 							}
-							$event->event_date_modified = current_time('mysql');
-							$event->event_all_day = ($event->event_start_time === '00:00:00' && $event->event_end_time === '00:00:00') ? 1 : 0;
+							if ($data['dtstamp']) {
+								$event->event_date_modified = date('Y-m-d H:i:s', strtotime($data['dtstamp']));
+							}
+							if ($data['dtstart'] && $data['dtend']) {
+								$time_diff = $time_start->diff($time_end);
+								$event->event_all_day = ($time_diff->format('%Y-%m-%d %H:%i:%s') === '00-0-0 23:59:59') ? 1 : 0;
+							}
 
 							foreach ($attrs as $attrName => $value) {
 								$event->event_attributes[$attrName] = $value;
@@ -367,6 +381,7 @@ class Importer {
 					'summary'             => isset($cols['summary']) ? $cols['summary'] : '',
 					'dtstart'             => isset($cols['dtstart']) ? $cols['dtstart'] : '',
 					'dtend'               => isset($cols['dtend']) ? $cols['dtend'] : '',
+					'dtstamp'             => isset($cols['dtstamp']) ? $cols['dtstamp'] : '',
 					'dtformat'            => isset($cols['dtformat']) ? $cols['dtformat'] : '',
 					'categories'          => isset($cols['categories']) ? $cols['categories'] : '',
 					'freq'                => isset($cols['freq']) ? $cols['freq'] : '',
@@ -451,33 +466,39 @@ class Importer {
 				}
 
 				# parse start time
-				$sevent = date_create_from_format($dtformat, $data['dtstart']);
-				if ($sevent === FALSE) {
+				$time_start = date_create_from_format($dtformat, $data['dtstart']);
+				if ($time_start === FALSE) {
 					throw new ImportException(
 						/* translators: %1$s = event summary; %2$s = date format; %3$s = start date */
 						sprintf(_x('invalid start date for %1$s: dtformat is %2$s and start date is %3$s', 'error', 'events-manager-import-export'),
 							$data['summary'], $dtformat, $data['dtstart'])
 					);
 				}
-				$event->start = $sevent->getTimestamp();
-				$event->event_start_date = date('Y-m-d', $event->start);
-				$event->event_start_time = date('H:i:s', $event->start);
+				$event->event_start_date = $time_start->format('Y-m-d');
+				$event->event_start_time = $time_start->format('H:i:s');
+				$event->start()->setTimestamp($time_start->getTimestamp());
 
 				# parse end time
-				$eevent = date_create_from_format($dtformat, $data['dtend']);
-				if ($eevent === FALSE) {
+				$time_end = date_create_from_format($dtformat, $data['dtend']);
+				if ($time_end === FALSE) {
 					throw new ImportException(
 						/* translators: %1$s = event summary; %2$s = date format; %3$s = end date */
 						sprintf(_x('invalid start date for %1$s: dtformat is %2$s and start date is %3$s', 'error', 'events-manager-import-export'),
 							$data['summary'], $dtformat, $data['dtend'])
 					);
 				}
-				$event->end = $eevent->getTimestamp();
-				$event->event_end_date = date('Y-m-d', $event->end);
-				$event->event_end_time = date('H:i:s', $event->end);
+				$event->event_end_date = $time_end->format('Y-m-d');
+				$event->event_end_time = $time_end->format('H:i:s');
+				$event->end()->setTimestamp($time_end->getTimestamp());
 
-				$event->event_date_modified = current_time('mysql');
-				$event->event_all_day = ($event->event_start_time === '00:00:00' && $event->event_end_time === '00:00:00') ? 1 : 0;
+				if ($data['dtstamp']) {
+					$event->event_date_modified = date('Y-m-d H:i:s', strtotime($data['dtstamp']));
+				}
+
+				if ($data['dtstart'] && $data['dtend']) {
+					$time_diff = $time_start->diff($time_end);
+					$event->event_all_day = ($time_diff->format('%Y-%m-%d %H:%i:%s') === '00-0-0 23:59:59') ? 1 : 0;
+				}
 
 				foreach ($attrs as $attrName => $value) {
 					$event->event_attributes[$attrName] = $value;
