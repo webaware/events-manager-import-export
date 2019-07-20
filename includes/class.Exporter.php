@@ -1,6 +1,7 @@
 <?php
 namespace webaware\em_import_export;
 
+use DateTimeZone;
 use EM_Events;
 use XMLWriter;
 
@@ -57,6 +58,8 @@ class Exporter {
 
 		nocache_headers();
 
+		$UTC = new DateTimeZone('UTC');
+
 		$xml = new XMLWriter();
 		$xml->openURI('php://output');			// write directly to PHP output
 		$xml->startDocument('1.0', 'UTF-8');
@@ -97,10 +100,12 @@ class Exporter {
 			$xml->writeElement('x-event_spaces', $EM_Event->event_spaces);
 
 			// get the start, end and last modified dates/times
-			// TODO: verify that gmt_offset works when switching between real time and Daylight Stupid Time
-			$gmtOffset = HOUR_IN_SECONDS * get_option('gmt_offset');
-			$xml->writeElement('dtstart', date('Y-m-d\TH:i:s\Z', $EM_Event->start - $gmtOffset));
-			$xml->writeElement('dtend', date('Y-m-d\TH:i:s\Z', $EM_Event->end - $gmtOffset));
+			$time_start = clone $EM_Event->start();
+			$time_start->setTimezone($UTC);
+			$xml->writeElement('dtstart', $time_start->format('Y-m-d\TH:i:s\Z'));
+			$time_end = clone $EM_Event->end();
+			$time_end->setTimezone($UTC);
+			$xml->writeElement('dtend', $time_end->format('Y-m-d\TH:i:s\Z'));
 			$xml->writeElement('dtstamp', date('Y-m-d\TH:i:s\Z', strtotime($EM_Event->post_modified_gmt)));
 
 			// get categories as comma-separated list
