@@ -22,7 +22,7 @@ class Exporter {
 	* export the data in selected format
 	*/
 	public function export() {
-		$EM_Events = EM_Events::get();
+		$EM_Events = EM_Events::get(array('scope' => 'all'));
 
 		$format = isset($_POST['exp_format']) ? wp_unslash($_POST['exp_format']) : '';
 
