@@ -30,6 +30,10 @@ if (!defined('ABSPATH')) {
 							<input type="radio" name="exp_format" id="exp_format_ee" value="Event Espresso" />
 							<label for="exp_format_ee"><?= esc_html_x('Event Espresso', 'file format', 'events-manager-import-export'); ?></label>
 						</li>
+                                                <li>
+                                                        <input type="radio" name="exp_format" id="exp_format_csv" value="CSV" />
+                                                        <label for="exp_format_csv"><?= esc_html_x('CSV', 'file format', 'events-manager-import-export'); ?></label>
+                                                </li>
 					</ul>
 				</td>
 			</tr>

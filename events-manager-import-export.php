@@ -3,7 +3,7 @@
 Plugin Name: Events Manager Import Export
 Plugin URI: https://github.com/webaware/events-manager-import-export
 Description: import and export function for Events Manager
-Version: 0.0.12
+Version: 0.0.13
 Author: WebAware
 Author URI: https://shop.webaware.com.au/
 Text Domain: events-manager-import-export

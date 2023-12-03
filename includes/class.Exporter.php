@@ -22,7 +22,7 @@ class Exporter {
 	* export the data in selected format
 	*/
 	public function export() {
-		$EM_Events = EM_Events::get();
+		$EM_Events = EM_Events::get(array('scope' => 'all'));
 
 		$format = isset($_POST['exp_format']) ? wp_unslash($_POST['exp_format']) : '';
 
@@ -424,5 +424,70 @@ class Exporter {
 
 		exit;
 	}
+	
+        /**
+        * export data in Event CSV format
+        * @param EM_Events $EM_Events
+        */
+        public function exportCSV($EM_Events) {
+                if (isset($_REQUEST['plaintext']) && $_REQUEST['plaintext'] === '1') {
+                        header('Content-Type: text/plain; charset=utf-8');
+                }
+                else {
+                        header('Content-Type: text/csv; charset=utf-8');
+                        header('Content-Disposition: attachment; filename="events.csv"');
+                }
 
+                nocache_headers();
+
+                // character conversion arrays
+                $charFrom = ['\\', ';', ',', "\n", "\t"];
+                $charTo = ['\\\\', '\;', '\,', '\\n', '\\t'];
+                // send header row
+
+                echo "uid,summary,dtstart,dtend,dtformat,categories,post_content,location_name,location_address,location_town,location_state,location_postcode,location_country,location_latitude,location_longitude\r\n";
+
+                foreach ($EM_Events as $EM_Event) {
+                        echo $EM_Event->event_id, ',';                         // event_identifier
+
+                        echo text_to_csv($EM_Event->event_name), ',';          // event_summary
+                        $gmtOffset = HOUR_IN_SECONDS * get_option('gmt_offset');
+                        echo text_to_csv(date('Y-m-d', $EM_Event->start - $gmtOffset)), ',';            // start_date
+                        echo text_to_csv(date('Y-m-d', $EM_Event->end - $gmtOffset)), ',';              // end_date
+                        echo text_to_csv("Y-m-d"), ',';         // dtformat
+                        // get categories as comma-separated list
+                        $cats = $EM_Event->get_categories()->categories;
+                        if (count($cats) > 0) {
+                                $categories = [];
+                                foreach ($cats as $cat) {
+                                        $categories[] = str_replace($charFrom, $charTo, $cat->output('#_CATEGORYNAME'));
+                                }
+                                echo text_to_csv(implode(',', $categories)), ',';
+                        }
+                        else {
+                                echo ',';
+                    }
+                        echo text_to_csv(preg_replace('/\s+/', ' ', strip_tags($EM_Event->post_content))), ',';                         // event_desc
+
+                        $location = $EM_Event->get_location();
+                        if (is_object($location)) {
+                                echo text_to_csv($location->location_name), ',';// address
+                                echo text_to_csv($location->location_address), ',';                                     // address
+                                echo text_to_csv($location->location_town), ',';// city
+                                echo text_to_csv($location->location_state), ',';                                       // state
+                                echo text_to_csv($location->location_postcode), ',';                                    // zip
+                                echo text_to_csv($location->get_country()), ',';// country
+                                echo text_to_csv($location->latitude), ',';    // country
+                                echo text_to_csv($location->longitude), ',';   // country
+                        }
+                        else {
+                                echo ',,,,,,,';
+                        }
+
+                        echo "\r\n";
+
+                }
+
+                exit;
+        }
 }
