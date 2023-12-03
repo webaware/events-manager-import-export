@@ -368,7 +368,7 @@ class Importer {
 		while ($line = fgets($fp)) {
 			$line = "\n$line\n";		// fix up line so that it can be parsed correctly
 
-			$cols = $csv->parse_string($line);
+			$cols = $csv->parseFile($line);
 
 			if ($cols) {
 				$rows++;
