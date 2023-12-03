@@ -2,9 +2,12 @@
 
 ## Changelog
 
-See GitHub for [the complete changelog](https://github.com/webaware/events-manager-import-export/blob/master/changelog.md).
+## Changelog 0.0.20, 2023-12-03
+* Fix export to export all events (not just future events)
+* changed: parsecsv upgraded to v1.3.2
+* added export CSV option
 
-### 0.0.12, soon...
+### 0.0.12
 
 * changed: requires PHP 5.6+ (recommend PHP 7.2+)
 * changed: Google Maps lookup is removed for now, will return soon as an Ajax-driven process post-import
